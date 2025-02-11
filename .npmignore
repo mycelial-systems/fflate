@@ -1,8 +1,4 @@
-*
-!esm/**
-!lib/**
-!umd/**
-!package.json
-!README.md
-!CHANGELOG.md
-!LICENSE
+!dist
+node_modules
+.env
+.DS_Store

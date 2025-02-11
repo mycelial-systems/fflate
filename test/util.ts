@@ -99,16 +99,21 @@ export const stream = (src: Uint8Array, dst: {
 }
 
 // create worker string
-const cws = (pkg: string, method: string = '_cjsDefault') => `
-  const ${method == '_cjsDefault' ? method : `{ ${method} }`} = require('${pkg}');
-  const { Worker, workerData, parentPort } = require('worker_threads');
-  try {
-    const buf = ${method}(...(Array.isArray(workerData) ? workerData : [workerData]));
-    parentPort.postMessage(buf, [buf.buffer]);
-  } catch (err) {
-    parentPort.postMessage({ err });
-  }
-`;
+const cws = (pkg:string, method:string = '_cjsDefault') => {
+  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  console.log('**method**', method)
+
+  return `
+    const ${method == '_cjsDefault' ? method : `{ ${method} }`} = require('${pkg}');
+    const { Worker, workerData, parentPort } = require('worker_threads');
+    try {
+      const buf = ${method}(...(Array.isArray(workerData) ? workerData : [workerData]));
+      parentPort.postMessage(buf, [buf.buffer]);
+    } catch (err) {
+      parentPort.postMessage({ err });
+    }
+  `;
+}
 
 export type Workerized = (workerData: Uint8Array | [Uint8Array, {}], transferable?: ArrayBuffer[]) => WorkerizedResult;
 export interface WorkerizedResult extends PromiseLike<Uint8Array> {
