@@ -50,7 +50,7 @@
     }
   },
   "scripts": {
-    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min",
+    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min && npm run build:lib",
     "build-cjs": "esbuild src/*.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
     "build-cjs:min": "esbuild src/*.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
     "build-esm": "esbuild src/*.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
@@ -62,7 +62,7 @@
     "toc": "markdown-toc --maxdepth 3 -i README.md",
     "start": "vite",
     "//build": "npm run build:lib && npm run build:docs && npm run build:demo",
-    "script": "node -r ts-node/register scripts/$SC.ts",
+    "script": "tsx scripts/$SC.ts",
     "build:lib": "tsc && tsc --project tsconfig.esm.json && npm run build:rewrite && npm run build:umd",
     "build:umd": "SC=buildUMD npm run script",
     "build:rewrite": "SC=rewriteBuilds npm run script",
@@ -112,6 +112,7 @@
     "terser": "^5.3.8",
     "tiny-inflate": "*",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typedoc": "^0.27.0",
     "typedoc-plugin-markdown": "^3.16.0",
     "typescript": "^5.7.2",

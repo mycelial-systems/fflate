@@ -1,5 +1,9 @@
 import { readFileSync, writeFileSync, unlinkSync } from 'fs';
-import { join } from 'path';
+import path, { join } from 'path';
+import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const atClass = /\/\*\* \@class \*\//g, pure = '/*#__PURE__*/';
 const esModule = /(exports\.__esModule = true;|Object\.defineProperty\(exports, "__esModule", { value: true }\);)\n/;
 const libDir = join(__dirname, '..', 'lib');
@@ -8,9 +12,11 @@ const lib = readFileSync(libIndex, 'utf-8')
   .replace(atClass, pure)
   .replace(esModule, '')
   .replace(/exports\.(.*) = void 0;\n/, '');
+
 const libTypes = readFileSync(join(libDir, 'index.d.ts'), 'utf-8');
 
 writeFileSync(libIndex, lib);
+
 const esmDir = join(__dirname, '..', 'esm');
 const esmIndex = join(esmDir, 'index.js'),
       esmWK = join(esmDir, 'worker.js'),
@@ -20,13 +26,16 @@ const esmIndex = join(esmDir, 'index.js'),
 const esm = readFileSync(esmIndex, 'utf-8').replace(atClass, pure);
 const wk = readFileSync(esmWK, 'utf-8'),
       nwk = readFileSync(esmNWK, 'utf-8');
+
 writeFileSync(join(libDir, 'worker.cjs'), readFileSync(join(libDir, 'worker.js'), 'utf-8').replace(esModule, ''));
 writeFileSync(join(libDir, 'node-worker.cjs'), readFileSync(join(libDir, 'node-worker.js'), 'utf-8').replace(esModule, ''));
 unlinkSync(esmIndex), unlinkSync(esmWK), unlinkSync(esmNWK), unlinkSync(libIndex), unlinkSync(libWK), unlinkSync(libNWK);
 unlinkSync(join(libDir, 'index.d.ts')), unlinkSync(join(libDir, 'worker.d.ts')), unlinkSync(join(libDir, 'node-worker.d.ts'));
+
 const workerImport = /import (.*?) from '\.\/node-worker';/;
 const workerRequire = /var (.*?) = require\("\.\/node-worker"\);/;
 const defaultExport = /export default/;
+
 writeFileSync(join(esmDir, 'index.mjs'), "import { createRequire } from 'module';\nvar require = createRequire('/');\n" + esm.replace(workerImport, name => nwk.replace(defaultExport, `var ${name.slice(7, name.indexOf(' ', 8))} =`)));
 writeFileSync(join(esmDir, 'index.d.mts'), libTypes);
 writeFileSync(join(esmDir, 'browser.js'), esm.replace(workerImport, name => wk.replace(defaultExport, `var ${name.slice(7, name.indexOf(' ', 8))} =`)));

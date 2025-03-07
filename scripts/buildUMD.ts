@@ -1,6 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { minify, MinifyOptions } from 'terser';
-import { join } from 'path';
+import path, { join } from 'path';
+import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const p = (...fns: string[]) => join(__dirname, '..', ...fns);
 
@@ -8,7 +11,7 @@ const src = readFileSync(p('lib', 'index.cjs'), 'utf8');
 const worker = readFileSync(p('lib', 'worker.cjs'), 'utf8');
 const nodeWorker = readFileSync(p('lib', 'node-worker.cjs'), 'utf8');
 
-const opts: MinifyOptions = {
+const opts:MinifyOptions = {
   mangle: {
     toplevel: true,
   },
