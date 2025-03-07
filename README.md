@@ -2,7 +2,21 @@
 High performance (de)compression in an 8kB package
 
 <details><summary><h2>Contents</h2></summary>
+
 <!-- toc -->
+
+- [Why fflate?](#why-fflate)
+- [Demo](#demo)
+- [Usage](#usage)
+- [Bundle size estimates](#bundle-size-estimates)
+- [What makes `fflate` so fast?](#what-makes-fflate-so-fast)
+- [What about `CompressionStream`?](#what-about-compressionstream)
+- [Browser support](#browser-support)
+- [Testing](#testing)
+- [License](#license)
+
+<!-- tocstop -->
+
 </details>
 
 ## Why fflate?
