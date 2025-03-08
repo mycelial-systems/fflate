@@ -2523,6 +2523,35 @@ export type UnzipFileHandler = (file: UnzipFile) => void;
 // flattened Zippable
 type FlatZippable<A extends boolean> = Record<string, [Uint8Array, (A extends true ? AsyncZipOptions : ZipOptions)]>;
 
+/**
+ * Flatten directory structure. Return a flat object of files where the keys
+ * are the folder path.
+ *
+ * @example
+ * ```js
+ * {
+ *   'name/hello': file_Uint8Array
+ * }
+ * ```
+ */
+export async function createZippable (list:FileList, opts:{
+  hiddenFiles:boolean
+} = { hiddenFiles: false }):Promise<Record<string, Uint8Array>> {
+  const showDotFiles = opts?.hiddenFiles
+  const zippable = await Array.from(list).reduce(async (_acc, file) => {
+      const acc = await _acc
+      const isDotFile = file.webkitRelativePath.split('/').pop()?.startsWith('.')
+      if (isDotFile && !showDotFiles) {
+          return acc
+      }
+      acc[file.webkitRelativePath] = new Uint8Array(await file.arrayBuffer())
+
+      return acc
+  }, Promise.resolve({}))
+
+  return zippable
+}
+
 // flatten a directory structure
 const fltn = <A extends boolean, D = A extends true ? AsyncZippable : Zippable>(d: D, p: string, t: FlatZippable<A>, o: ZipOptions) => {
   for (const k in d) {
