@@ -1,7 +1,7 @@
 {
   "name": "@substrate-system/fflate",
   "type": "module",
-  "version": "0.8.8",
+  "version": "0.8.11",
   "description": "High performance (de)compression in an 8kB package",
   "main": "dist/index.js",
   "files": [
