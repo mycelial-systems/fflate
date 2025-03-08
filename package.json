@@ -5,7 +5,10 @@
   "description": "High performance (de)compression in an 8kB package",
   "main": "dist/index.js",
   "files": [
-    "./dist/*"
+    "./dist/*",
+    "./esm/*",
+    "./lib/*",
+    "./umd/*"
   ],
   "exports": {
     ".": {
