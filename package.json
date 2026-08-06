@@ -50,7 +50,8 @@
         "types": "./lib/browser.d.cts",
         "default": "./lib/browser.cjs"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min && npm run build:lib",
@@ -70,8 +71,9 @@
     "build:umd": "SC=buildUMD npm run script",
     "build:rewrite": "SC=rewriteBuilds npm run script",
     "build:demo": "tsc --project tsconfig.demo.json && parcel build demo/index.html --no-cache --public-url \"./\" && SC=cpGHPages npm run script",
-    "build:docs": "typedoc --plugin typedoc-plugin-markdown --hideBreadcrumbs --readme none --disableSources --excludePrivate --excludeProtected --githubPages false --out docs/ src/index.ts",
-    "test": "TS_NODE_PROJECT=test/tsconfig.json uvu -b -r ts-node/register test",
+    "build:docs": "typedoc --plugin typedoc-plugin-markdown --hideBreadcrumbs --readme none --disableSources --excludePrivate --excludeProtected --expandParameters --githubPages false --out docs/ src/index.ts",
+    "test": "tsx test/index.ts",
+    "test:valid": "tsx test/0-valid.ts",
     "//prepack": "npm run build && npm run test"
   },
   "repository": "https://github.com/substrate-system/fflate",
@@ -102,26 +104,24 @@
   "devDependencies": {
     "@parcel/service-worker": "^2.9.3",
     "@substrate-system/tapzero": "^0.10.13",
-    "@types/node": "^22.13.1",
+    "@types/node": "^25.8.0",
     "@types/pako": "*",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "auto-changelog": "^2.5.0",
     "esbuild": "^0.25.0",
-    "jszip": "^3.5.0",
+    "jszip": "^3.10.1",
     "markdown-toc": "^1.2.0",
     "pako": "*",
     "parcel": "^2.9.3",
     "preact": "^10.25.4",
     "simple-git": "^3.19.1",
-    "terser": "^5.3.8",
+    "terser": "^5.47.1",
     "tiny-inflate": "*",
-    "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
-    "typedoc": "^0.27.0",
-    "typedoc-plugin-markdown": "^3.16.0",
-    "typescript": "^5.7.2",
-    "uvu": "^0.3.3",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^6.0.3",
     "uzip": "*"
   }
 }

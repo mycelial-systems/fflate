@@ -1,9 +1,14 @@
 import { existsSync, readFile, writeFile } from 'fs';
 import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { get } from 'https';
-import { suite } from 'uvu';
+import { test } from '@substrate-system/tapzero';
+import type { Test } from '@substrate-system/tapzero';
 import { performance } from 'perf_hooks';
 import { Worker } from 'worker_threads';
+
+// ESM has no __dirname
+const here = fileURLToPath(new URL('.', import.meta.url));
 
 const testFiles = {
   basic: Buffer.from('Hello world!'),
@@ -23,7 +28,7 @@ const dlCached = async <T extends Record<string, string | Buffer>>(files: T) => 
   for (const name in files) {
     let data: string | Buffer = files[name];
     if (typeof data == 'string') {
-      const fn = resolve(__dirname, 'data', name);
+      const fn = resolve(here, 'data', name);
       if (!existsSync(fn)) {
         console.log('\nDownloading ' + data + '...');
         data = await new Promise((r, re) => get(data as string, res => {
@@ -54,7 +59,12 @@ const dlCached = async <T extends Record<string, string | Buffer>>(files: T) => 
 const testFilesPromise = dlCached(testFiles);
 const testZipFilesPromise = dlCached(testZipFiles);
 
-export type TestHandler = (file: Buffer, name: string, resetTimer: () => void) => unknown | Promise<unknown>;
+export type TestHandler = (
+  file: Buffer,
+  name: string,
+  resetTimer: () => void,
+  t: Test
+) => unknown | Promise<unknown>;
 
 export const testSuites = async <T extends Record<string, TestHandler>, D extends 'zip' | 'default' = 'default'>(suites: T, type?: D) => {
   type DK = keyof (D extends 'zip' ? typeof testZipFiles : typeof testFiles);
@@ -62,26 +72,25 @@ export const testSuites = async <T extends Record<string, TestHandler>, D extend
   const tfp = type == 'zip' ? testZipFilesPromise : testFilesPromise;
   const perf = {} as Record<keyof T, Promise<Record<DK, number>>>;
   for (const k in suites) {
-    perf[k] = new Promise(async setPerf => {
-      const ste = suite(k);
-      let localTestFiles: Record<DK, Buffer>;
-      ste.before(async () => {
-        localTestFiles = (await tfp) as unknown as Record<DK, Buffer>;
-      });
+    // The executor must stay synchronous so that every test is registered
+    // during module evaluation, before tapzero starts the run.
+    perf[k] = new Promise(setPerf => {
       const localPerf = {} as Record<DK, number>;
       for (const name in tf) {
-        ste(name, async () => {
+        test(k + ' > ' + name, async t => {
+          const localTestFiles = (await tfp) as unknown as Record<DK, Buffer>;
           let ts = performance.now();
-          await suites[k](localTestFiles[name], name, () => {
+          await suites[k](localTestFiles[name as keyof typeof localTestFiles], name, () => {
             ts = performance.now();
-          });
-          localPerf[name] = performance.now() - ts;
+          }, t);
+          localPerf[name as keyof typeof localPerf] = performance.now() - ts;
         });
       }
-      ste.after(() => {
+      // Tests run in registration order, so this settles only once every
+      // test in the suite above has finished.
+      test(k + ' > collect timings', () => {
         setPerf(localPerf);
       });
-      ste.run();
     })
   }
   const resolvedPerf = {} as Record<keyof T, Record<DK, number>>;
@@ -100,9 +109,6 @@ export const stream = (src: Uint8Array, dst: {
 
 // create worker string
 const cws = (pkg:string, method:string = '_cjsDefault') => {
-  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-  console.log('**method**', method)
-
   return `
     const ${method == '_cjsDefault' ? method : `{ ${method} }`} = require('${pkg}');
     const { Worker, workerData, parentPort } = require('worker_threads');
@@ -116,7 +122,7 @@ const cws = (pkg:string, method:string = '_cjsDefault') => {
 }
 
 export type Workerized = (workerData: Uint8Array | [Uint8Array, {}], transferable?: ArrayBuffer[]) => WorkerizedResult;
-export interface WorkerizedResult extends PromiseLike<Uint8Array> {
+export interface WorkerizedResult extends PromiseLike<Uint8Array<ArrayBuffer>> {
   timeout(ms: number): void;
 };
 
@@ -156,7 +162,9 @@ const wc = (pkg: string, method?: string): Workerized => {
   }
 }
 
-const fflate = resolve(__dirname, '..');
+// Workers require() this by absolute path, which bypasses the "exports"
+// map and would otherwise land on the ESM build. Point at the CJS build.
+const fflate = resolve(here, '..', 'lib', 'index.cjs');
 
 export const workers = {
   fflate: {
@@ -194,8 +202,9 @@ export const workers = {
   }
 };
 
+
 export const bClone = (buf: Buffer) => {
-  const clone = Buffer.allocUnsafe(buf.length);
+  const clone = Buffer.allocUnsafeSlow(buf.length);
   clone.set(buf);
   return clone;
 }
